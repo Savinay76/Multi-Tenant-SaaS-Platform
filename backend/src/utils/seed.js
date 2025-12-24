@@ -1,5 +1,5 @@
-const { Client } = require('pg');
 const bcrypt = require('bcrypt');
+const { Client } = require('pg');
 
 (async () => {
   const client = new Client({
@@ -16,14 +16,14 @@ const bcrypt = require('bcrypt');
 
   await client.query(`
     INSERT INTO users (email, password_hash, full_name, role)
-    VALUES ('superadmin@system.com', $1, 'Super Admin', 'super_admin')
+    VALUES ($1, $2, $3, $4)
     ON CONFLICT DO NOTHING
-  `, [hash]);
+  `, [
+    'superadmin@system.com',
+    hash,
+    'Super Admin',
+    'super_admin'
+  ]);
 
-  console.log('✔ seed data inserted');
   await client.end();
-  process.exit(0);
-})().catch(err => {
-  console.error('Seed failed', err);
-  process.exit(1);
-});
+})();
