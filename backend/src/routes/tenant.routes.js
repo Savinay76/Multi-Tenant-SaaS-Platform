@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const tenantController = require('../controllers/tenantController');
+const { protect } = require('../middleware/authMiddleware');
 
-const tenantController = require('../controllers/tenant.controller');
-const auth = require('../middleware/auth');
+router.use(protect);
 
-router.get('/:tenantId', auth, tenantController.getTenantDetails);
+router.get('/', tenantController.listTenants);
+router.get('/:id', tenantController.getTenant);
+router.put('/:id', tenantController.updateTenant);
 
 module.exports = router;
