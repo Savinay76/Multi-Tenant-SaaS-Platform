@@ -1,15 +1,17 @@
-CREATE TABLE IF NOT EXISTS tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  status VARCHAR(20) CHECK (status IN ('todo','in_progress','completed')) DEFAULT 'todo',
-  priority VARCHAR(10) CHECK (priority IN ('low','medium','high')) DEFAULT 'medium',
-  assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
-  due_date DATE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+DO $$ BEGIN
+    CREATE TYPE "enum_tasks_status" AS ENUM ('todo', 'in_progress', 'done');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE INDEX idx_tasks_tenant_project ON tasks(tenant_id, project_id);
+CREATE TABLE IF NOT EXISTS "tasks" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "title" VARCHAR(255) NOT NULL,
+    "status" "enum_tasks_status" DEFAULT 'todo',
+    "projectId" UUID NOT NULL REFERENCES "projects" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "tenantId" UUID NOT NULL REFERENCES "tenants" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    -- FIX: Added assignedTo column
+    "assignedTo" UUID REFERENCES "users" ("id") ON DELETE SET NULL,
+    "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
