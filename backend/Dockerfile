@@ -1,11 +1,14 @@
-FROM node:18
-
-RUN apt-get update && apt-get install -y postgresql-client
+FROM node:18-alpine
 
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm install
+
 COPY . .
 
+RUN chmod +x start.sh
+
 EXPOSE 5000
+
 CMD ["sh", "start.sh"]
