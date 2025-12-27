@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Optional: Smooth background for the whole app */
 body {
   @apply bg-gray-50 text-gray-900;
 }

@@ -24,11 +24,28 @@ export default function ProjectDetails() {
       setTasks(tasksRes.data.data);
       
     } catch (error) {
+      console.error(error);
       toast.error('Failed to load project details');
     }
   };
 
-  useEffect(() => { fetchProjectData(); }, [id]);
+  useEffect(() => {
+  const fetchProjectData = async () => {
+    try {
+      const projectRes = await api.get(`/projects/${id}`);
+      setProject(projectRes.data.data);
+
+      const tasksRes = await api.get(`/projects/${id}/tasks`);
+      setTasks(tasksRes.data.data);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to load project details');
+    }
+  };
+
+  fetchProjectData();
+}, [id]);
+
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
@@ -39,6 +56,7 @@ export default function ProjectDetails() {
       setShowTaskForm(false);
       fetchProjectData();
     } catch (error) {
+      console.error(error);
       toast.error('Failed to create task');
     }
   };
@@ -49,6 +67,7 @@ export default function ProjectDetails() {
       toast.success('Task updated');
       fetchProjectData();
     } catch (error) {
+      console.error(error);
       toast.error('Failed to update status');
     }
   };
@@ -60,6 +79,7 @@ export default function ProjectDetails() {
       toast.success('Task deleted');
       fetchProjectData();
     } catch (error) {
+      console.error(error);
       toast.error('Failed to delete task');
     }
   };

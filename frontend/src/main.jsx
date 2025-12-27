@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
@@ -12,6 +11,7 @@ try {
     localStorage.removeItem('token');
   }
 } catch (e) {
+  console.error(e);
   localStorage.clear();
 }
 // ---------------------------

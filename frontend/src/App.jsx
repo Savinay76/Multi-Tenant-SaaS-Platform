@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
-import Login from './pages/Login';
+import Login from './pages/login';
 import Register from './pages/Register';
 import RegisterTenant from './pages/RegisterTenant'; // <--- 1. IMPORT THIS
 import Dashboard from './pages/Dashboard';
@@ -9,11 +9,11 @@ import Projects from './pages/Projects';
 import ProjectDetails from './pages/ProjectDetails';
 import Users from './pages/Users';
 
-const ProtectedRoute = ({ children }) => {
+function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" replace />;
   return children;
-};
+}
 
 function App() {
   return (

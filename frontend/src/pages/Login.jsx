@@ -22,6 +22,7 @@ export default function Dashboard() {
       user = JSON.parse(storedUser);
     }
   } catch (err) {
+    console.error(err);
     console.warn("Corrupted user data in Dashboard, using default.");
     // We don't clear storage here to avoid fighting with other components
   }

@@ -17,6 +17,7 @@ export default function Users() {
       currentUser = JSON.parse(storedUser);
     }
   } catch (error) {
+    console.error(error);
     console.warn("Corrupted user data in Users page");
   }
   const isAdmin = currentUser.role === 'tenant_admin';
@@ -27,6 +28,7 @@ export default function Users() {
       const res = await api.get('/users');
       setUsers(res.data.data);
     } catch (error) {
+      console.error(error);
       toast.error('Failed to load team members');
     } finally {
       setLoading(false);

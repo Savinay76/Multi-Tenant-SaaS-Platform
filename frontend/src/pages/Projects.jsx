@@ -14,6 +14,7 @@ export default function Projects() {
       const res = await api.get('/projects');
       setProjects(res.data.data);
     } catch (error) {
+      console.error(error);
       toast.error('Failed to load projects');
     }
   };
@@ -29,6 +30,7 @@ export default function Projects() {
       setShowForm(false);
       fetchProjects();
     } catch (error) {
+      console.error(error);
       toast.error('Error creating project');
     }
   };
@@ -42,6 +44,7 @@ export default function Projects() {
       toast.success('Project Deleted');
       fetchProjects();
     } catch (error) {
+      console.error(error);
       toast.error('Failed to delete project');
     }
   };
