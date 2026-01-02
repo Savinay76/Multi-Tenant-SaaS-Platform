@@ -19,6 +19,7 @@ export default function Projects() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchProjects(); }, []);
 
   const handleSubmit = async (e) => {

@@ -15,6 +15,7 @@ export default function Layout() {
       user = JSON.parse(storedUser);
     }
   } catch (error) {
+    console.error(error);
     console.warn("User data corrupted, using default.");
     // Do NOT navigate here to avoid infinite loops, just use default user
   }

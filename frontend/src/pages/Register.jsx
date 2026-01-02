@@ -20,6 +20,7 @@ export default function Projects() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchProjects(); }, []);
 
   const handleSubmit = async (e) => {
@@ -36,10 +37,11 @@ export default function Projects() {
     }
   };
 
-  const handleDelete = async (e, projectId) => {
+
+  async function handleDelete(e, projectId) {
     e.preventDefault(); // Stop clicking the card link
     if (!window.confirm("Are you sure you want to delete this project? This cannot be undone.")) return;
-    
+
     try {
       await api.delete(`/projects/${projectId}`);
       toast.success('Project Deleted');
@@ -48,7 +50,7 @@ export default function Projects() {
       console.error(error);
       toast.error('Failed to delete project');
     }
-  };
+  }
 
   return (
     <div className="space-y-6">

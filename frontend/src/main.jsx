@@ -2,7 +2,6 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
-
 try {
   const user = localStorage.getItem('user');
   if (user === "undefined" || user === undefined) {

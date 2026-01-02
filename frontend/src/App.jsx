@@ -20,7 +20,7 @@ function App() {
     <Router>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/register" element={<Register />} />
         <Route path="/register-tenant" element={<RegisterTenant />} /> {/* <--- 2. ADD THIS ROUTE */}
         
@@ -35,6 +35,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>
+   
   );
 }
 
