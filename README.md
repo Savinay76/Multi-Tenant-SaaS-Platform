@@ -10,11 +10,6 @@ This application is a full-stack SaaS platform designed for organizations to man
 
 ---
 
-## 📺 Video Demo
-**[🎥 Click here to watch the Project Walkthrough & Architecture Demo]()**
-
----
-
 ## 🌟 Key Features
 
 1.  **🏢 Strict Tenant Isolation**
