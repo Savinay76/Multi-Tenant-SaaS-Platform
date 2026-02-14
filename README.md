@@ -332,12 +332,6 @@ The frontend is being actively integrated and will include:
 
 ---
 
-## Youtube vide link
-
-[click here](https://youtu.be/mv7SGoIT8lk)
-
----
-
 ## Conclusion
 
 This project demonstrates a **real-world, production-grade multi-tenant SaaS architecture** with a strong focus on security, scalability, and maintainability. The backend is fully operational and designed to support enterprise-level SaaS requirements, while the frontend integration completes the full-stack experience.
