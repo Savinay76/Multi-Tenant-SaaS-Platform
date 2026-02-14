@@ -1,15 +1,17 @@
-# Changed from 18 to 22
-FROM node:22-alpine 
+FROM node:20-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
+RUN npm config set fetch-retries 5 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retry-maxtimeout 120000 \
+ && npm config set registry https://registry.npmjs.org/ \
+ && npm install --no-audit --no-fund
 
-RUN npm install
 
 COPY . .
 
 EXPOSE 3000
 
-# We set the command in package.json, so this runs that script
 CMD ["npm", "run", "dev"]

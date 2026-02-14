@@ -1,105 +1,118 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import api from '../api';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import AuthNavbar from "../components/AuthNavbar";
+import "../styles/auth.css";
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    tenantSubdomain: '' // Required for regular users
-  });
+  const { login } = useAuth();
   const navigate = useNavigate();
 
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    subdomain: "",
+    remember: false,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   };
 
+  // FRONTEND-ONLY FIX (BACKEND SAFE)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     try {
-      const response = await api.post('/auth/login', formData);
+      setLoading(true);
 
-      // Save token and user info
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data));
+      // Transform payload to EXACT backend contract
+      await login({
+        email: form.email,
+        password: form.password,
+        tenantSubdomain: form.subdomain, // BACKEND EXPECTS THIS
+      });
 
-      toast.success('Login successful!');
-      navigate('/dashboard');
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || 'Login failed');
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold">Welcome Back</h2>
+    <div className="auth-page">
+      <AuthNavbar />
+
+      <div className="auth-content">
+        {/* LEFT INFO */}
+        <div className="auth-info">
+          <h1>Manage projects with ease</h1>
+          <p>
+            A secure multi-tenant platform to manage projects, tasks, and teams
+            efficiently.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* RIGHT CARD */}
+        <div className="auth-card">
+          <h2>Login</h2>
 
-          {/* Workspace Field - Critical for Multi-Tenancy */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Workspace
-            </label>
-            <input
-              type="text"
-              name="tenantSubdomain"
-              placeholder="Enter Subdomain"
-              className="w-full px-3 py-2 mt-1 border rounded-md focus:ring-blue-500 focus:border-blue-500"
-              value={formData.tenantSubdomain}
-              onChange={handleChange}
-            />
-          </div>
+          {error && <div className="error">{error}</div>}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+          <form onSubmit={handleSubmit}>
             <input
               type="email"
               name="email"
-              required
-              className="w-full px-3 py-2 mt-1 border rounded-md focus:ring-blue-500 focus:border-blue-500"
-              value={formData.email}
+              placeholder="Email"
+              value={form.email}
               onChange={handleChange}
+              required
             />
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
               name="password"
-              required
-              className="w-full px-3 py-2 mt-1 border rounded-md focus:ring-blue-500 focus:border-blue-500"
-              value={formData.password}
+              placeholder="Password"
+              value={form.password}
               onChange={handleChange}
+              required
             />
+
+            <input
+              name="subdomain"
+              placeholder="Tenant Subdomain"
+              value={form.subdomain}
+              onChange={handleChange}
+              required
+            />
+
+            <div className="auth-options">
+              <input
+                type="checkbox"
+                id="remember"
+                name="remember"
+                checked={form.remember}
+                onChange={handleChange}
+              />
+              <label htmlFor="remember">Remember me</label>
+            </div>
+
+            <button type="submit" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            Don’t have an account? <Link to="/register">Register</Link>
           </div>
-
-          <button
-            type="submit"
-            className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-          >
-            Sign In
-          </button>
-        </form>
-
-        {/* --- HERE IS THE LINK YOU WANTED --- */}
-        <div className="text-sm text-center text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-medium text-blue-600 hover:underline">
-            Register User
-          </Link>
-          <span className="mx-2">|</span>
-          <Link to="/register-tenant" className="font-medium text-blue-600 hover:underline">
-            Register Organization
-          </Link>
         </div>
-
       </div>
     </div>
   );

@@ -1,15 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const taskController = require('../controllers/taskController');
-const { protect } = require('../middleware/authMiddleware');
 
-// All routes here are protected
-router.use(protect);
+const authMiddleware = require('../middleware/authMiddleware');
+const tenantIsolation = require('../middleware/tenantMiddleware');
+const taskController = require('../controllers/taskCtrl');
 
-router.post('/', taskController.createTask);
-router.get('/', taskController.getTasks);
-router.patch('/:id', taskController.updateTaskStatus);
-router.put('/:id', taskController.updateTask);
-router.delete('/:id', taskController.deleteTask);
+router.use(authMiddleware);
+router.use(tenantIsolation);
+
+// Create task
+router.post(
+  '/projects/:projectId/tasks',
+  taskController.createTask
+);
+
+// List tasks for project
+router.get(
+  '/projects/:projectId/tasks',
+  taskController.listTasks
+);
+
+// Update task status only
+router.patch(
+  '/tasks/:taskId/status',
+  taskController.updateTaskStatus
+);
+
+// Update task (all fields)
+router.put(
+  '/tasks/:taskId',
+  taskController.updateTask
+);
+
+// Delete task
+router.delete(
+  '/tasks/:taskId',
+  taskController.deleteTask
+);
 
 module.exports = router;

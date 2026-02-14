@@ -1,41 +1,79 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import Layout from './components/Layout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import RegisterTenant from './pages/RegisterTenant'; // <--- 1. IMPORT THIS
-import Dashboard from './pages/Dashboard';
-import Projects from './pages/Projects';
-import ProjectDetails from './pages/ProjectDetails';
-import Users from './pages/Users';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import ProtectedLayout from "./layouts/ProtectedLayout";
+import ProjectDetails from "./pages/ProjectDetails";
+import MyTasks from "./pages/MyTasks";
+import Users from "./pages/Users";
+import Tenants from "./pages/Tenants";
+import "./styles/layout.css";
 
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
-  return children;
-};
-
-function App() {
+export default function App() {
   return (
-    <Router>
-      <Toaster position="top-right" />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/register-tenant" element={<RegisterTenant />} /> {/* <--- 2. ADD THIS ROUTE */}
-        
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
-          <Route path="/users" element={<Users />} />
-        </Route>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* DEFAULT ROUTE */}
+          <Route path="/" element={<Navigate to="/login" />} />
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          /> */}
+
+          {/* PROTECTED ROUTES */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedLayout>
+                <Dashboard />
+              </ProtectedLayout>
+            }
+          />
+
+          <Route
+            path="/projects"
+            element={
+              <ProtectedLayout>
+                <Projects />
+              </ProtectedLayout>
+            }
+          />
+          <Route path="/projects/:projectId" element={<ProjectDetails />} />
+          <Route path="/tasks" element={<MyTasks />} />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute roles={["tenant_admin"]}>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenants"
+            element={
+              <ProtectedRoute roles={["super_admin"]}>
+                <Tenants />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* <Route path="/tenants" element={<Tenants />} />
+          <Route path="*" element={<p>NO MATCH</p>} /> */}
+
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
-
-export default App;

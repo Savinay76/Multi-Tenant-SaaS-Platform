@@ -1,201 +1,617 @@
-
 # API Documentation
 
-Base URL: `http://localhost:5000`
-
-## 🔐 Authentication
-
-### 1. Register Tenant
-* **Endpoint:** `POST /api/auth/register-tenant`
-* **Access:** Public
-* **Description:** Register a new organization and admin account.
-* **Body:**
-  ```json
-  {
-    "tenantName": "SpaceX",
-    "subdomain": "spacex",
-    "adminEmail": "elon@spacex.com",
-    "adminPassword": "password123",
-    "adminFullName": "Elon Musk"
-  }
-
-```
-
-### 2. Login
-
-* **Endpoint:** `POST /api/auth/login`
-* **Access:** Public
-* **Body:**
-```json
-{
-  "email": "elon@spacex.com",
-  "password": "password123",
-  "tenantSubdomain": "spacex" // Optional for Super Admin
-}
-
-```
-
-
-* **Response:** Returns JWT token and user info.
-
-### 3. Get Current User
-
-* **Endpoint:** `GET /api/auth/me`
-* **Access:** Protected (Bearer Token)
-
-### 4. Logout
-
-* **Endpoint:** `POST /api/auth/logout`
-* **Access:** Protected
+**Multi-Tenant SaaS Platform – Project & Task Management**
 
 ---
 
-## 🏢 Tenant Management
+## Base URL
 
-### 5. List All Tenants
+**Docker / Local**
 
-* **Endpoint:** `GET /api/tenants`
-* **Access:** Super Admin Only
-* **Query Parameters:**
-* `page` (default: 1)
-* `limit` (default: 10)
-* `status` (optional: 'active', 'suspended')
-* `subscriptionPlan` (optional: 'free', 'pro', 'enterprise')
+```
+http://localhost:5000/api/health
+```
 
+---
 
-* **Response:**
+## Authentication
+
+All protected endpoints require a JWT token.
+
+**Header**
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+---
+
+## Standard Response Format
+
+All API responses follow this structure:
+
+```json
+{
+  "success": true,
+  "message": "optional",
+  "data": {}
+}
+```
+
+---
+
+## 🔐 AUTHENTICATION MODULE
+
+---
+
+### API 1: Register Tenant
+
+**POST** `/auth/register-tenant`
+Authentication: ❌ Public
+
+Creates a new tenant and its first tenant administrator.
+
+#### Request Body
+
+```json
+{
+  "tenantName": "Test Company Alpha",
+  "subdomain": "testalpha",
+  "adminEmail": "admin@testalpha.com",
+  "adminPassword": "TestPass@123",
+  "adminFullName": "Alpha Admin"
+}
+```
+
+#### Success Response (201)
+
+```json
+{
+  "success": true,
+  "message": "Tenant registered successfully",
+  "data": {
+    "tenantId": "uuid",
+    "subdomain": "testalpha",
+    "adminUser": {
+      "id": "uuid",
+      "email": "admin@testalpha.com",
+      "fullName": "Alpha Admin",
+      "role": "tenant_admin"
+    }
+  }
+}
+```
+
+---
+
+### API 2: Login
+
+**POST** `/auth/login`
+Authentication: ❌ Public
+
+Authenticates a user within a tenant and returns a JWT token.
+
+#### Request Body
+
+```json
+{
+  "email": "admin@demo.com",
+  "password": "Demo@123",
+  "tenantSubdomain": "demo"
+}
+```
+
+#### Success Response (200)
+
 ```json
 {
   "success": true,
   "data": {
-    "tenants": [...],
-    "pagination": { "total": 50, "currentPage": 1, "totalPages": 5 }
+    "user": {
+      "id": "uuid",
+      "email": "admin@demo.com",
+      "fullName": "Demo Admin",
+      "role": "tenant_admin",
+      "tenantId": "uuid"
+    },
+    "token": "jwt-token",
+    "expiresIn": 86400
   }
 }
-
 ```
-
-
-
-### 6. Get Tenant Details
-
-* **Endpoint:** `GET /api/tenants/:tenantId`
-* **Access:** Super Admin or Tenant Admin (own tenant only)
-
-### 7. Update Tenant
-
-* **Endpoint:** `PUT /api/tenants/:tenantId`
-* **Access:** Super Admin (all fields) or Tenant Admin (name only)
 
 ---
 
-## 👥 User Management
+### API 3: Get Current User
 
-### 8. Add User
+**GET** `/auth/me`
+Authentication: ✅ Required
 
-* **Endpoint:** `POST /api/tenants/:tenantId/users`
-* **Access:** Tenant Admin Only
-* **Body:**
+Returns the authenticated user along with tenant details.
+
+#### Success Response (200)
+
 ```json
 {
-  "fullName": "Engineer 1",
-  "email": "eng@spacex.com",
-  "password": "password123",
-  "role": "user"
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "email": "admin@demo.com",
+    "fullName": "Demo Admin",
+    "role": "tenant_admin",
+    "isActive": true,
+    "tenant": {
+      "id": "uuid",
+      "name": "Demo Company",
+      "subdomain": "demo",
+      "subscriptionPlan": "pro",
+      "maxUsers": 25,
+      "maxProjects": 15
+    }
+  }
 }
-
 ```
-
-
-
-### 9. List Users
-
-* **Endpoint:** `GET /api/tenants/:tenantId/users`
-* **Access:** Protected
-
-### 10. Update User
-
-* **Endpoint:** `PUT /api/users/:userId`
-* **Access:** Tenant Admin
-
-### 11. Delete User
-
-* **Endpoint:** `DELETE /api/users/:userId`
-* **Access:** Tenant Admin
-* **Note:** Tenant Admin cannot delete themselves.
 
 ---
 
-## 🚀 Project Management
+### API 4: Logout
 
-### 12. Create Project
+**POST** `/auth/logout`
+Authentication: ✅ Required
 
-* **Endpoint:** `POST /api/projects`
-* **Access:** Tenant Admin
-* **Body:**
+For JWT-based auth, this invalidates the session client-side.
+
+#### Success Response (200)
+
 ```json
 {
-  "name": "Mars Mission",
-  "description": "Colonize Mars",
-  "status": "active"
+  "success": true,
+  "message": "Logged out successfully"
 }
-
 ```
-
-
-
-### 13. List Projects
-
-* **Endpoint:** `GET /api/projects`
-* **Access:** Protected (Scoped to Tenant)
-
-### 14. Get Project
-
-* **Endpoint:** `GET /api/projects/:projectId`
-* **Access:** Protected
-
-### 15. Update Project
-
-* **Endpoint:** `PUT /api/projects/:projectId`
-* **Access:** Tenant Admin
-
-### 16. Delete Project
-
-* **Endpoint:** `DELETE /api/projects/:projectId`
-* **Access:** Tenant Admin
 
 ---
 
-## ✅ Task Management
+## 🏢 TENANT MANAGEMENT
 
-### 17. Create Task
+---
 
-* **Endpoint:** `POST /api/projects/:projectId/tasks`
-* **Access:** Protected
-* **Body:**
+### API 5: Get Tenant Details
+
+**GET** `/tenants/:tenantId`
+Authentication: ✅ Required
+Authorization:
+
+* tenant_admin → own tenant only
+* super_admin → any tenant
+
+#### Success Response (200)
+
 ```json
 {
-  "title": "Build Rocket",
-  "status": "todo", // todo, in_progress, done
-  "projectId": "uuid..."
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "Demo Company",
+    "subdomain": "demo",
+    "status": "active",
+    "subscriptionPlan": "pro",
+    "maxUsers": 25,
+    "maxProjects": 15,
+    "createdAt": "timestamp",
+    "stats": {
+      "totalUsers": 5,
+      "totalProjects": 2,
+      "totalTasks": 8
+    }
+  }
 }
-
 ```
 
+---
+
+### API 6: Update Tenant
+
+**PUT** `/tenants/:tenantId`
+Authentication: ✅ Required
+
+Authorization rules:
+
+* tenant_admin → can update **name only**
+* super_admin → can update all fields
+
+#### Request Body
+
+```json
+{
+  "name": "Updated Company Name"
+}
+```
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Tenant updated successfully",
+  "data": {
+    "id": "uuid",
+    "name": "Updated Company Name",
+    "updatedAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 7: List All Tenants
+
+**GET** `/tenants`
+Authentication: ✅ Required
+Authorization: super_admin only
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "tenants": [
+      {
+        "id": "uuid",
+        "name": "Demo Company",
+        "subdomain": "demo",
+        "status": "active",
+        "subscriptionPlan": "pro",
+        "totalUsers": 5,
+        "totalProjects": 2,
+        "createdAt": "timestamp"
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "totalTenants": 1,
+      "limit": 10
+    }
+  }
+}
+```
+
+---
+
+## 👥 USER MANAGEMENT
+
+---
+
+### API 8: Add User
+
+**POST** `/tenants/:tenantId/users`
+Authentication: ✅ Required
+Authorization: tenant_admin
+
+#### Success Response (201)
+
+```json
+{
+  "success": true,
+  "message": "User created successfully",
+  "data": {
+    "id": "uuid",
+    "email": "newuser@demo.com",
+    "fullName": "New User",
+    "role": "user",
+    "tenantId": "uuid",
+    "isActive": true,
+    "createdAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 9: List Users
+
+**GET** `/tenants/:tenantId/users`
+Authentication: ✅ Required
+
+Supports pagination and role filtering.
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "uuid",
+        "email": "user1@demo.com",
+        "fullName": "Demo User",
+        "role": "user",
+        "isActive": true,
+        "createdAt": "timestamp"
+      }
+    ],
+    "total": 3,
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "limit": 50
+    }
+  }
+}
+```
+
+---
+
+### API 10: Update User
+
+**PUT** `/users/:userId`
+Authentication: ✅ Required
+
+Authorization:
+
+* tenant_admin → update any user in tenant
+* user → update own profile (limited fields)
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "message": "User updated successfully",
+  "data": {
+    "id": "uuid",
+    "fullName": "Updated Name",
+    "role": "user",
+    "updatedAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 11: Delete User
+
+**DELETE** `/users/:userId`
+Authentication: ✅ Required
+Authorization: tenant_admin
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "message": "User deleted successfully"
+}
+```
+
+---
+
+## 📁 PROJECT MANAGEMENT
+
+---
+
+### API 12: Create Project
+
+**POST** `/projects`
+Authentication: ✅ Required
+
+#### Success Response (201)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "tenantId": "uuid",
+    "name": "Project Alpha",
+    "description": "First demo project",
+    "status": "active",
+    "createdBy": "uuid",
+    "createdAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 13: List Projects
+
+**GET** `/projects`
+Authentication: ✅ Required
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "projects": [
+      {
+        "id": "uuid",
+        "name": "Project Alpha",
+        "description": "First demo project",
+        "status": "active",
+        "createdBy": {
+          "id": "uuid",
+          "fullName": "Demo Admin"
+        },
+        "taskCount": 5,
+        "completedTaskCount": 2,
+        "createdAt": "timestamp"
+      }
+    ],
+    "total": 1,
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "limit": 20
+    }
+  }
+}
+```
+
+---
+
+### API 14: Update Project
+
+**PUT** `/projects/:projectId`
+Authentication: ✅ Required
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Project updated successfully",
+  "data": {
+    "id": "uuid",
+    "name": "Updated Project",
+    "description": "Updated description",
+    "status": "archived",
+    "updatedAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 15: Delete Project
+
+**DELETE** `/projects/:projectId`
+Authentication: ✅ Required
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Project deleted successfully"
+}
+```
+
+---
+
+## ✅ TASK MANAGEMENT
+
+---
+
+### API 16: Create Task
+
+**POST** `/projects/:projectId/tasks`
+Authentication: ✅ Required
+
+#### Success Response (201)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "projectId": "uuid",
+    "tenantId": "uuid",
+    "title": "Design homepage",
+    "description": "Create UI",
+    "status": "todo",
+    "priority": "high",
+    "assignedTo": "uuid",
+    "dueDate": "2024-07-15",
+    "createdAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 17: List Tasks
+
+**GET** `/projects/:projectId/tasks`
+Authentication: ✅ Required
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "tasks": [
+      {
+        "id": "uuid",
+        "title": "Design homepage",
+        "description": "Create UI",
+        "status": "in_progress",
+        "priority": "high",
+        "assignedTo": {
+          "id": "uuid",
+          "fullName": "Demo Admin",
+          "email": "admin@demo.com"
+        },
+        "dueDate": "2024-07-01",
+        "createdAt": "timestamp"
+      }
+    ],
+    "total": 5,
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "limit": 50
+    }
+  }
+}
+```
+
+---
+
+### API 18: Update Task Status
+
+**PATCH** `/tasks/:taskId/status`
+Authentication: ✅ Required
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "status": "completed",
+    "updatedAt": "timestamp"
+  }
+}
+```
+
+---
+
+### API 19: Update Task
+
+**PUT** `/tasks/:taskId`
+Authentication: ✅ Required
+
+#### Success Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Task updated successfully",
+  "data": {
+    "id": "uuid",
+    "title": "Updated task title",
+    "description": "Updated description",
+    "status": "in_progress",
+    "priority": "high",
+    "assignedTo": {
+      "id": "uuid",
+      "fullName": "Demo Admin",
+      "email": "admin@demo.com"
+    },
+    "dueDate": "2024-08-01",
+    "updatedAt": "timestamp"
+  }
+}
+```
+
+---
 
 
-### 18. List Tasks
-
-* **Endpoint:** `GET /api/projects/:projectId/tasks`
-* **Access:** Protected
-
-### 19. Update Task
-
-* **Endpoint:** `PUT /api/tasks/:taskId`
-* **Access:** Protected
-
-### 20. Update Task Status
-
-* **Endpoint:** `PATCH /api/tasks/:taskId/status`
-* **Access:** Protected
-* **Body:** `{ "status": "done" }`

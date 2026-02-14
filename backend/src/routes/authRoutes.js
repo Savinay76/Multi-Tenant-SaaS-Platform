@@ -1,12 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+
+const authMiddleware = require('../middleware/authMiddleware');
+const authController = require('../controllers/authCtrl');
 
 router.post('/register-tenant', authController.registerTenant);
-router.post('/register', authController.register); // Keep for adding users to existing tenant
 router.post('/login', authController.login);
-router.post('/logout', protect, authController.logout);
-router.get('/me', protect, authController.getMe); 
+router.get('/me', authMiddleware, authController.getMe);
+router.post('/logout', authMiddleware, (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  });
+});
 
 module.exports = router;

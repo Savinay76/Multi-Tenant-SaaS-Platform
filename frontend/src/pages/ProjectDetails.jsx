@@ -1,209 +1,273 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import api from '../api';
-import toast from 'react-hot-toast';
-import { ArrowLeft, Calendar, CheckCircle, Clock, Trash2, Plus } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../services/api";
+import Navbar from "../components/Navbar";
+import TaskModal from "../components/TaskModal";
+import EditProjectInline from "../components/EditProjectInline";
+import "../styles/projectDetails.css";
 
 export default function ProjectDetails() {
-  const { id } = useParams();
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', status: 'todo' });
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchProjectData = async () => {
-    try {
-      const projectRes = await api.get(`/projects/${id}`);
-      setProject(projectRes.data.data);
-      
-      // Assuming the backend returns tasks inside the project object or we fetch them separately
-      // Adjust this based on your actual API response structure. 
-      // If tasks are nested: setTasks(projectRes.data.data.Tasks || []);
-      // If separate endpoint:
-      const tasksRes = await api.get(`/tasks?projectId=${id}`); 
-      setTasks(tasksRes.data.data);
-      
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to load project details');
+  const [filters, setFilters] = useState({
+    status: "",
+    priority: "",
+    assignedTo: "",
+  });
+
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+
+  /* =========================
+     LOAD PROJECT + TASKS
+  ========================= */
+  const loadData = async () => {
+  try {
+    setLoading(true);
+
+    // Get all projects (backend-supported)
+    const projectsRes = await api.get("/projects");
+    const projects = projectsRes.data.data.projects || [];
+
+    const foundProject = projects.find(p => p.id === projectId);
+
+    if (!foundProject) {
+      setProject(null);
+      return;
     }
-  };
+
+    setProject(foundProject);
+
+    // Get tasks for this project
+    const taskRes = await api.get(`/projects/${projectId}/tasks`);
+    setTasks(taskRes.data.data.tasks || []);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
-  const fetchProjectData = async () => {
-    try {
-      const projectRes = await api.get(`/projects/${id}`);
-      setProject(projectRes.data.data);
+    loadData();
+  }, [projectId]);
 
-      const tasksRes = await api.get(`/projects/${id}/tasks`);
-      setTasks(tasksRes.data.data);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to load project details');
-    }
+  /* =========================
+     DELETE PROJECT
+  ========================= */
+  const deleteProject = async () => {
+    if (!window.confirm("Delete this project permanently?")) return;
+    await api.delete(`/projects/${projectId}`);
+    navigate("/projects");
   };
 
-  fetchProjectData();
-}, [id]);
-
-
-  const handleCreateTask = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/tasks', { ...newTask, projectId: id });
-      toast.success('Task added');
-      setNewTask({ title: '', status: 'todo' });
-      setShowTaskForm(false);
-      fetchProjectData();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to create task');
-    }
+  /* =========================
+     DELETE TASK
+  ========================= */
+  const deleteTask = async (taskId) => {
+    if (!window.confirm("Delete this task?")) return;
+    await api.delete(`/tasks/${taskId}`);
+    loadData();
   };
 
-  const handleUpdateStatus = async (taskId, newStatus) => {
-    try {
-      await api.patch(`/tasks/${taskId}`, { status: newStatus });
-      toast.success('Task updated');
-      fetchProjectData();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to update status');
-    }
+  /* =========================
+     UPDATE TASK STATUS
+  ========================= */
+  const updateTaskStatus = async (taskId, status) => {
+    await api.patch(`/tasks/${taskId}/status`, { status });
+    loadData();
   };
 
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      toast.success('Task deleted');
-      fetchProjectData();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to delete task');
-    }
-  };
+  /* =========================
+     FILTER TASKS
+  ========================= */
+  const filteredTasks = tasks.filter((t) => {
+    if (filters.status && t.status !== filters.status) return false;
+    if (filters.priority && t.priority !== filters.priority) return false;
+    if (filters.assignedTo && t.assignedTo?.id !== filters.assignedTo) return false;
+    return true;
+  });
 
-  if (!project) return <div>Loading...</div>;
+  if (loading) return <div className="page-loading">Loading...</div>;
+  if (!project) return <div className="page-loading">Project not found</div>;
 
   return (
-    <div className="space-y-6">
-      <Link to="/projects" className="flex items-center text-gray-500 hover:text-indigo-600 transition">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back to Projects
-      </Link>
+    <>
+      <Navbar />
+      <div className="app-container">
+        <div className="project-wrapper">
+          {/* ================= PROJECT HEADER ================= */}
+          <div className="project-header">
+            <div>
+              <EditProjectInline project={project} onUpdated={loadData} />
+              <p className="project-desc">
+                {project.description || "No description"}
+              </p>
+            </div>
 
-      {/* Project Header */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{project.name}</h1>
-            <p className="text-gray-500">{project.description}</p>
-          </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${
-            project.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-          }`}>
-            {project.status}
-          </span>
-        </div>
-        <div className="mt-6 flex items-center gap-6 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Created {new Date(project.createdAt).toLocaleDateString()}
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            {tasks.filter(t => t.status === 'done').length} / {tasks.length} Tasks Completed
-          </div>
-        </div>
-      </div>
-
-      {/* Tasks Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Tasks</h2>
-          <button 
-            onClick={() => setShowTaskForm(!showTaskForm)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm text-sm font-medium"
-          >
-            {showTaskForm ? 'Cancel' : <><Plus className="h-4 w-4" /> Add Task</>}
-          </button>
-        </div>
-
-        {/* Task Form */}
-        {showTaskForm && (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 animate-fade-in-down">
-            <form onSubmit={handleCreateTask} className="flex gap-4">
-              <input 
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                placeholder="What needs to be done?"
-                value={newTask.title}
-                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                required
-              />
-              <select 
-                className="border border-gray-300 px-4 py-2 rounded-lg outline-none bg-white"
-                value={newTask.status}
-                onChange={(e) => setNewTask({...newTask, status: e.target.value})}
-              >
-                <option value="todo">To Do</option>
-                <option value="in_progress">In Progress</option>
-                <option value="done">Done</option>
-              </select>
-              <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 font-medium">
-                Save
+            <div className="project-actions">
+              <span className={`status ${project.status}`}>
+                {project.status}
+              </span>
+              <button className="danger-btn" onClick={deleteProject}>
+                Delete Project
               </button>
-            </form>
+            </div>
           </div>
-        )}
 
-        {/* Task List */}
-        <div className="space-y-3">
-          {tasks.map((task) => (
-            <div key={task.id} className="group bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-full ${
-                  task.status === 'done' ? 'bg-green-100 text-green-600' : 
-                  task.status === 'in_progress' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
-                }`}>
-                  {task.status === 'done' ? <CheckCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
-                </div>
-                <div>
-                  <p className={`font-medium ${task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                    {task.title}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <select 
-                  className="text-sm border-none bg-transparent font-medium text-gray-500 focus:ring-0 cursor-pointer hover:text-indigo-600"
-                  value={task.status}
-                  onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="done">Done</option>
-                </select>
-
-                {/* DELETE BUTTON */}
-                <button 
-                  onClick={() => handleDeleteTask(task.id)}
-                  className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                  title="Delete Task"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+          {/* ================= TASKS ================= */}
+          <div className="tasks-section">
+            <div className="tasks-header">
+              <h2>Tasks</h2>
+              <button
+                className="primary-btn"
+                onClick={() => {
+                  setEditingTask(null);
+                  setTaskModalOpen(true);
+                }}
+              >
+                + Add Task
+              </button>
             </div>
-          ))}
 
-          {tasks.length === 0 && !showTaskForm && (
-            <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-              <p className="text-gray-500">No tasks found for this project.</p>
+            {/* ================= FILTERS ================= */}
+            <div className="task-filters">
+              <select
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+              >
+                <option value="">All Status</option>
+                <option value="todo">Todo</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+
+              <select
+                value={filters.priority}
+                onChange={(e) =>
+                  setFilters({ ...filters, priority: e.target.value })
+                }
+              >
+                <option value="">All Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+
+              <select
+                value={filters.assignedTo}
+                onChange={(e) =>
+                  setFilters({ ...filters, assignedTo: e.target.value })
+                }
+              >
+                <option value="">All Assignees</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.fullName}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* ================= TASK TABLE ================= */}
+            {filteredTasks.length === 0 ? (
+              <div className="empty-state">No tasks found</div>
+            ) : (
+              <table className="task-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assigned</th>
+                    <th>Due</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredTasks.map((task) => (
+                    <tr key={task.id}>
+                      <td data-label="Title">{task.title}</td>
+
+                      <td data-label="Status">
+                        <span className={`badge ${task.status}`}>
+                          {task.status}
+                        </span>
+                      </td>
+
+                      <td data-label="Priority">
+                        <span className={`priority ${task.priority}`}>
+                          {task.priority}
+                        </span>
+                      </td>
+
+                      <td data-label="Assigned">
+                        {task.assignedTo?.fullName || "—"}
+                      </td>
+
+                      <td data-label="Due">
+                        {task.dueDate
+                          ? new Date(task.dueDate).toLocaleDateString()
+                          : "—"}
+                      </td>
+
+                      <td data-label="Actions" className="task-actions">
+                        <select
+                          value={task.status}
+                          onChange={(e) =>
+                            updateTaskStatus(task.id, e.target.value)
+                          }
+                        >
+                          <option value="todo">Todo</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                        </select>
+
+                        <button
+                          onClick={() => {
+                            setEditingTask(task);
+                            setTaskModalOpen(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="danger-btn"
+                          onClick={() => deleteTask(task.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* ================= MODAL ================= */}
+          {taskModalOpen && (
+            <TaskModal
+              projectId={projectId}
+              task={editingTask}
+              onClose={() => setTaskModalOpen(false)}
+              onSaved={loadData}
+            />
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

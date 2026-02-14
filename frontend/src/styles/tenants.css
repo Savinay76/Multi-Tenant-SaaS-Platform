@@ -1,0 +1,240 @@
+/* =========================
+   PAGE LAYOUT
+========================= */
+.tenants-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+
+.page-loading {
+  padding: 40px;
+  font-size: 18px;
+}
+
+.error-text {
+  color: red;
+  padding: 20px;
+}
+
+/* =========================
+   FILTER BAR (ADDON)
+========================= */
+.tenant-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.tenant-filters input,
+.tenant-filters select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  min-width: 180px;
+}
+
+/* =========================
+   GRID
+========================= */
+.tenants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  justify-content: center;
+}
+
+/* =========================
+   CARD
+========================= */
+.tenant-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tenant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================
+   HEADER
+========================= */
+.tenant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tenant-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+/* =========================
+   STATUS BADGE
+========================= */
+.status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status.active {
+  background: #e6f7ec;
+  color: #0f9d58;
+}
+
+.status.inactive,
+.status.suspended {
+  background: #fdecea;
+  color: #d93025;
+}
+
+/* =========================
+   SUBDOMAIN
+========================= */
+.subdomain {
+  margin: 12px 0;
+  color: #555;
+}
+
+/* =========================
+   PLAN BADGE
+========================= */
+.plan {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.plan.free {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.plan.pro {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.plan.enterprise {
+  background: #ecfeff;
+  color: #0891b2;
+}
+
+/* =========================
+   STATS
+========================= */
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.stat-number {
+  display: block;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* =========================
+   EDIT BUTTON (ADDON)
+========================= */
+.edit-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+
+  border: none;
+  background: #0f172a;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background: #020617;
+}
+
+
+/* =========================
+   MODAL (ADDON)
+========================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  width: 320px;
+}
+
+.modal h3 {
+  margin-top: 0;
+}
+
+.modal label {
+  display: block;
+  margin-top: 14px;
+  font-weight: 500;
+}
+
+.modal select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-actions .primary {
+  background: #0f172a;
+  color: white;
+}

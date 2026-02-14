@@ -1,16 +1,33 @@
-DO $$ BEGIN
-    CREATE TYPE "enum_projects_status" AS ENUM ('active', 'archived', 'completed');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
 
-CREATE TABLE IF NOT EXISTS "projects" (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "name" VARCHAR(255) NOT NULL,
-    "description" TEXT,
-    "status" "enum_projects_status" DEFAULT 'active',
-    "tenantId" UUID NOT NULL REFERENCES "tenants" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    "createdById" UUID NOT NULL REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TYPE project_status_enum AS ENUM (
+  'active',
+  'archived',
+  'completed'
 );
+
+CREATE TABLE projects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+  tenant_id UUID NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  status project_status_enum NOT NULL DEFAULT 'active',
+
+  created_by UUID NOT NULL,
+
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+
+  CONSTRAINT fk_projects_tenant
+    FOREIGN KEY (tenant_id)
+    REFERENCES tenants(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_projects_creator
+    FOREIGN KEY (created_by)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_projects_tenant_id ON projects(tenant_id);
